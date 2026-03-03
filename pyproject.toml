@@ -12,8 +12,10 @@ authors = [
     {name = "Richard W. Doty"}
 ]
 license = { file = "LICENSE" }
+
 dependencies = [
     "numpy",
+    "scipy",
 ]
 
 [project.optional-dependencies]
