@@ -5,13 +5,16 @@ from typing import Iterable
 import numpy as np
 
 from .statistic import _as_1d_float_array, statistic
+from .backends.exact_dp import isf_exact, sf_exact
 
 
 def sf(c: float, n: int, k: int, method: str = "exact") -> float:
     """
     Survival function S_{n:k}(c) = P(T_{n:k} > c) under the global null.
     """
-    raise NotImplementedError
+    if method == "exact":
+        return sf_exact(c, n, k)
+    raise ValueError(f"Unknown method={method!r}.")
 
 
 def cdf(c: float, n: int, k: int, method: str = "exact") -> float:
@@ -21,7 +24,9 @@ def cdf(c: float, n: int, k: int, method: str = "exact") -> float:
 
 def isf(alpha: float, n: int, k: int, method: str = "exact") -> float:
     """Inverse survival: smallest c such that S_{n:k}(c) <= alpha."""
-    raise NotImplementedError
+    if method == "exact":
+        return isf_exact(alpha, n, k)
+    raise ValueError(f"Unknown method={method!r}.")
 
 
 def pvalue(pvals: Iterable[float] | np.ndarray, k: int, method: str = "exact") -> float:
