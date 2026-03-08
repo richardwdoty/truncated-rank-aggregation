@@ -4,8 +4,9 @@ from typing import Iterable
 
 import numpy as np
 
-from .statistic import _as_1d_float_array, statistic
 from .backends.exact_dp import isf_exact, sf_exact
+from .result import TRATestResult
+from .statistic import _as_1d_float_array, statistic
 
 
 def sf(c: float, n: int, k: int, method: str = "exact") -> float:
@@ -35,12 +36,37 @@ def pvalue(pvals: Iterable[float] | np.ndarray, k: int, method: str = "exact") -
 
       1) computing t = T_{n:k}(pvals)
       2) returning S_{n:k}(t)
-
-    Notes
-    -----
-    This function validates pvals and enforces 1 <= k <= n.
     """
     x = _as_1d_float_array(pvals)
     n = int(x.size)
     t = statistic(x, k)
     return sf(t, n=n, k=k, method=method)
+
+
+def test(
+    pvals: Iterable[float] | np.ndarray,
+    k: int,
+    method: str = "exact",
+) -> TRATestResult:
+    """
+    Run the Truncated Rank Aggregation test.
+
+    Parameters
+    ----------
+    pvals
+        A 1D vector of p-values in [0, 1].
+    k
+        Truncation level, must satisfy 1 <= k <= n.
+    method
+        Null evaluation method.
+
+    Returns
+    -------
+    TRATestResult
+        Object containing the observed statistic and null p-value.
+    """
+    x = _as_1d_float_array(pvals)
+    n = int(x.size)
+    t = statistic(x, k)
+    pv = sf(t, n=n, k=k, method=method)
+    return TRATestResult(statistic=t, pvalue=pv, n=n, k=k)
