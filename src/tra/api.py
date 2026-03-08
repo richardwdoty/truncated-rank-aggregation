@@ -5,6 +5,7 @@ from typing import Iterable
 import numpy as np
 
 from .backends.exact_dp import isf_exact, sf_exact
+from .backends.simplex import sf_simplex
 from .result import TRATestResult
 from .statistic import _as_1d_float_array, statistic
 
@@ -15,6 +16,8 @@ def sf(c: float, n: int, k: int, method: str = "exact") -> float:
     """
     if method == "exact":
         return sf_exact(c, n, k)
+    if method == "simplex":
+        return sf_simplex(c, n, k)
     raise ValueError(f"Unknown method={method!r}.")
 
 
