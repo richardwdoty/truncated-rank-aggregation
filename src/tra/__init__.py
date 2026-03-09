@@ -5,6 +5,7 @@ Truncated Rank Aggregation (TRA)
 from .api import cdf, isf, pvalue, sf, test
 from .result import TRATestResult
 from .statistic import statistic
+from .thresholds import thresholds
 
 __all__ = [
     "TRATestResult",
@@ -14,4 +15,5 @@ __all__ = [
     "isf",
     "pvalue",
     "test",
+    "thresholds",
 ]

@@ -7,6 +7,7 @@ import numpy as np
 from .backends.exact_dp import isf_exact, sf_exact
 from .backends.simplex import sf_simplex
 from .result import TRATestResult
+from .thresholds import thresholds
 from .statistic import _as_1d_float_array, statistic
 
 
