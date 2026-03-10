@@ -4,7 +4,7 @@ from typing import Iterable
 
 import numpy as np
 
-from .backends.exact_dp import isf_exact, sf_exact
+from .backends.exact_dp import isf_exact, sf_exact, sf_exact_grid
 from .backends.simplex import sf_simplex
 from .result import TRATestResult
 from .thresholds import thresholds
@@ -19,6 +19,36 @@ def sf(c: float, n: int, k: int, method: str = "exact") -> float:
         return sf_exact(c, n, k)
     if method == "simplex":
         return sf_simplex(c, n, k)
+    raise ValueError(f"Unknown method={method!r}.")
+
+
+def sf_grid(c: Iterable[float] | np.ndarray, n: int, k: int, method: str = "exact") -> np.ndarray:
+    """
+    Survival function S_{n:k}(c) evaluated over a grid of c values.
+
+    Parameters
+    ----------
+    c
+        1D array-like of values in [0, 1].
+    n, k
+        TRA parameters.
+    method
+        Null evaluation method.
+
+    Returns
+    -------
+    ndarray
+        Array of survival values.
+    """
+    c = np.asarray(c, dtype=float).reshape(-1)
+
+    if method == "exact":
+        return sf_exact_grid(c, n, k)
+    if method == "simplex":
+        from .backends.simplex import sf_simplex_grid
+
+        return sf_simplex_grid(c, n, k)
+
     raise ValueError(f"Unknown method={method!r}.")
 
 

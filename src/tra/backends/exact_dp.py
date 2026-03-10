@@ -191,3 +191,173 @@ def isf_exact(alpha: float, n: int, k: int) -> float:
 
     # Guaranteed sign change: f(0)=1-alpha>0, f(1)=0-alpha<0
     return float(brentq(f, 0.0, 1.0, xtol=1e-12, rtol=1e-12, maxiter=200))
+
+
+def _binom_pmf_prefix_batch(m: int, q: np.ndarray, x_max: int) -> np.ndarray:
+    """
+    Compute a batch of Binomial(m, q_t) PMF prefixes.
+
+    Parameters
+    ----------
+    m
+        Number of trials.
+    q
+        1D array of success probabilities, one per grid point.
+    x_max
+        Maximum x value to compute.
+
+    Returns
+    -------
+    ndarray
+        Array of shape (len(q), x_max + 1) with entries
+
+            out[t, x] = P(X = x),  X ~ Binomial(m, q[t]),
+
+        for x = 0, ..., x_max.
+    """
+    q = np.asarray(q, dtype=float)
+    if q.ndim != 1:
+        raise ValueError("q must be a 1D array.")
+
+    t_size = q.size
+    if x_max < 0:
+        return np.empty((t_size, 0), dtype=float)
+
+    if m == 0:
+        out = np.zeros((t_size, x_max + 1), dtype=float)
+        out[:, 0] = 1.0
+        return out
+
+    x_max = min(x_max, m)
+    out = np.zeros((t_size, x_max + 1), dtype=float)
+
+    mask0 = q <= 0.0
+    mask1 = q >= 1.0
+    mask_mid = ~(mask0 | mask1)
+
+    out[mask0, 0] = 1.0
+    if x_max >= m:
+        out[mask1, m] = 1.0
+
+    if np.any(mask_mid):
+        qq = q[mask_mid]
+
+        # P(X=0) = (1-q)^m, computed stably
+        p = np.exp(m * np.log1p(-qq))
+        out[mask_mid, 0] = p
+
+        ratio = qq / (1.0 - qq)
+        for x in range(0, x_max):
+            p *= ((m - x) / (x + 1)) * ratio
+            out[mask_mid, x + 1] = p
+
+    return out
+
+
+def thresholds_a_grid(c: np.ndarray, n: int, k: int) -> np.ndarray:
+    """
+    Vectorized computation of thresholds a_i(c) = F_{n:i}^{-1}(c).
+
+    Parameters
+    ----------
+    c
+        1D array of values in [0, 1].
+    n, k
+        TRA parameters.
+
+    Returns
+    -------
+    ndarray
+        Array of shape (len(c), k+1) containing [a_0(c), ..., a_k(c)] row-wise,
+        with a_0(c) = 0.
+    """
+    n, k = _validate_nk(n, k)
+    c = np.asarray(c, dtype=float).reshape(-1)
+
+    if np.any(c < 0.0) or np.any(c > 1.0):
+        raise ValueError("All c values must lie in [0, 1].")
+
+    a = np.empty((c.size, k + 1), dtype=float)
+    a[:, 0] = 0.0
+
+    if k == 0:
+        return a
+
+    i = np.arange(1, k + 1)
+    a_inner = beta.ppf(c[:, None], i[None, :], (n - i + 1)[None, :])
+
+    # Numerical guardrails
+    a_inner = np.clip(a_inner, 0.0, 1.0)
+    a_inner = np.maximum.accumulate(a_inner, axis=1)
+
+    a[:, 1:] = a_inner
+    return a
+
+
+def sf_exact_grid(c: np.ndarray, n: int, k: int) -> np.ndarray:
+    r"""
+    Exact null survival S_{n:k}(c) evaluated over a grid of c values.
+
+    This is a batched implementation of the same DP recursion used by sf_exact,
+    but vectorized over the grid dimension for improved performance.
+
+    Parameters
+    ----------
+    c
+        1D array-like of values in [0, 1].
+    n, k
+        TRA parameters.
+
+    Returns
+    -------
+    ndarray
+        Array of survival values with the same length as c.
+    """
+    n, k = _validate_nk(n, k)
+    c = np.asarray(c, dtype=float).reshape(-1)
+
+    out = np.empty_like(c, dtype=float)
+
+    out[c <= 0.0] = 1.0
+    out[c >= 1.0] = 0.0
+
+    mid = (c > 0.0) & (c < 1.0)
+    if not np.any(mid):
+        return out
+
+    cc = c[mid]
+    t_size = cc.size
+
+    a = thresholds_a_grid(cc, n, k)     # shape (t_size, k+1)
+    p = np.diff(a, axis=1)              # shape (t_size, k)
+
+    # DP state after j processed bins: support r = 0, ..., j
+    probs = np.ones((t_size, 1), dtype=float)
+
+    for j in range(0, k):
+        aj = a[:, j]
+        pj = p[:, j]
+
+        denom = 1.0 - aj
+        qj = np.where(denom > 0.0, pj / denom, 0.0)
+
+        new = np.zeros((t_size, j + 2), dtype=float)
+
+        for r in range(0, j + 1):
+            pr = probs[:, r]
+            m_rem = n - r
+            x_max = min(j - r, m_rem)
+            if x_max < 0:
+                continue
+
+            pm = _binom_pmf_prefix_batch(m_rem, qj, x_max)
+
+            new[:, r : r + x_max + 1] += pr[:, None] * pm
+
+        probs = new
+
+    out[mid] = probs.sum(axis=1)
+
+    # Final numerical guard
+    out = np.clip(out, 0.0, 1.0)
+    return out
