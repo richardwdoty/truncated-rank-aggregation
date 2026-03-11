@@ -104,3 +104,6 @@ def test(
     t = statistic(x, k)
     pv = sf(t, n=n, k=k, method=method)
     return TRATestResult(statistic=t, pvalue=pv, n=n, k=k)
+
+
+from .distribution import null_dist
