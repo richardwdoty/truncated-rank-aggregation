@@ -3,10 +3,10 @@ from __future__ import annotations
 import numpy as np
 from scipy.stats import beta
 
-from .backends.exact_dp import _validate_nk, isf_exact
+from .backends.exact_dp import _validate_nk
 
 
-def thresholds(alpha: float, n: int, k: int, method: str = "exact") -> np.ndarray:
+def thresholds(alpha: float, n: int | None = None, k: int | None = None, method: str = "exact") -> np.ndarray:
     """
     Compute ordered rejection thresholds for TRA.
 
@@ -33,19 +33,26 @@ def thresholds(alpha: float, n: int, k: int, method: str = "exact") -> np.ndarra
     -------
     ndarray
         Array of thresholds [a_1, ..., a_k].
+
+    Currently only the exact finite-n backend is supported.
     """
     if not (0.0 < alpha < 1.0):
-        raise ValueError(f"alpha must lie in (0,1); got {alpha}.")
-
-    n, k = _validate_nk(n, k)
+        raise ValueError("alpha must lie in (0,1).")
 
     if method != "exact":
         raise ValueError(f"Unknown method={method!r}.")
 
-    c = isf_exact(alpha, n, k)
+    if n is None or k is None:
+        raise ValueError("method='exact' requires both n and k.")
+
+    n, k = _validate_nk(n, k)
+    
+    from .api import isf
+
+    c_alpha = isf(alpha, n=n, k=k, method="exact")
 
     i = np.arange(1, k + 1)
-    a = beta.ppf(c, i, n - i + 1)
+    a = beta.ppf(c_alpha, i, n - i + 1)
 
     a = np.clip(a, 0.0, 1.0)
     a = np.maximum.accumulate(a)
