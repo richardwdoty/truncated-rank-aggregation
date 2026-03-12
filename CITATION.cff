@@ -1,0 +1,29 @@
+cff-version: 1.2.0
+title: "Truncated Rank Aggregation (TRA)"
+message: "If you use this software in your research, please cite it as follows."
+type: software
+
+authors:
+  - family-names: Doty
+    given-names: Richard W.
+
+repository-code: https://github.com/richardwdoty/truncated-rank-aggregation
+
+license: MIT
+
+version: 0.1.0
+date-released: 2025-01-01
+
+keywords:
+  - statistics
+  - p-value aggregation
+  - multiple testing
+  - hypothesis testing
+  - order statistics
+  - truncated rank aggregation
+
+abstract: >
+  Python implementation of Truncated Rank Aggregation (TRA), a statistical
+  method for combining the most informative ordered p-values. The package
+  includes exact finite-sample null distributions, ordered-simplex validation,
+  fast grid evaluation, and fixed-k asymptotic approximations.
