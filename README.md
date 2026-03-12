@@ -2,17 +2,15 @@
 
 **Truncated Rank Aggregation (TRA)** is a statistical procedure for combining the most informative order statistics from a collection of p-values. The method evaluates the statistic
 
-\[
-T_{n:k} = \min_{1 \le i \le k} R_i,
-\]
+$$T_{n:k} = \min_{1 \le i \le k} R_i,$$
 
-where \(R_i\) is the probability–integral transform (PIT) of the \(i\)-th order statistic under the global null.
+where $R_i$ is the probability–integral transform (PIT) of the $i$-th order statistic under the global null.
 
 This repository provides a Python implementation of TRA, including:
 
 - exact finite-sample null survival evaluation via a multinomial / dynamic programming recursion
 - an independent ordered-simplex integral representation for validation
-- fixed-\(k\) asymptotic approximations via a Poisson-process limit
+- fixed-$k$ asymptotic approximations via a Poisson-process limit
 - fast grid evaluation for plotting and calibration
 - rank-wise rejection thresholds for interpretability
 
@@ -62,9 +60,7 @@ t = tra.statistic(pvals, k=5)
 
 This computes
 
-[
-T_{n:k} = \min_{1 \le i \le k} R_i.
-]
+$$T_{n:k} = \min_{1 \le i \le k} R_i.$$
 
 ---
 
@@ -76,9 +72,7 @@ p = tra.pvalue(pvals, k=5)
 
 Internally this evaluates the null survival function
 
-[
-S_{n:k}(c) = P(T_{n:k} > c).
-]
+$$S_{n:k}(c) = P(T_{n:k} > c).$$
 
 ---
 
@@ -124,11 +118,9 @@ a = tra.thresholds(alpha=0.05, n=100, k=5)
 
 The test rejects if
 
-[
-P_{(i)} \le a_i
-]
+$$P_{(i)} \le a_i$$
 
-for some (i \le k).
+for some $i \le k$.
 
 These thresholds often provide a more interpretable view of the test than the statistic itself.
 
