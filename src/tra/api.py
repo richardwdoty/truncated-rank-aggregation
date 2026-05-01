@@ -90,25 +90,24 @@ def isf(alpha: float, n: int | None = None, k: int | None = None, method: str = 
     raise ValueError(f"Unknown method={method!r}.")
 
 
+def ppf(alpha: float, n: int | None = None, k: int | None = None, method: str = "exact") -> float:
+    """Percent point function (inverse of CDF)."""
+    return isf(1.0 - alpha, n=n, k=k, method=method)
+
+
 def pvalue(pvals: Iterable[float] | np.ndarray, k: int, method: str = "exact") -> float:
     """
     Compute a p-value for observed p-values by:
 
       1) computing t = T_{n:k}(pvals)
-      2) returning the null survival at t
+      2) returning the null CDF at t
     """
     x = _as_1d_float_array(pvals)
     n = int(x.size)
     _validate_nk(n, k)
     t = statistic(x, k)
 
-    if method in {"exact", "simplex"}:
-        return sf(t, n=n, k=k, method=method)
-
-    if method == "asymptotic":
-        return sf(t, k=k, method=method)
-
-    raise ValueError(f"Unknown method={method!r}.")
+    return cdf(t, n=n, k=k, method=method)
 
 
 def test(
@@ -124,13 +123,7 @@ def test(
     _validate_nk(n, k)
 
     t = statistic(x, k)
-
-    if method in {"exact", "simplex"}:
-        pv = sf(t, n=n, k=k, method=method)
-    elif method == "asymptotic":
-        pv = sf(t, k=k, method=method)
-    else:
-        raise ValueError(f"Unknown method={method!r}.")
+    pv = cdf(t, n=n, k=k, method=method)
 
     return TRATestResult(statistic=t, pvalue=pv, n=n, k=k)
 

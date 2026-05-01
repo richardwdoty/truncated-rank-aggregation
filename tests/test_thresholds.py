@@ -19,16 +19,17 @@ def test_threshold_monotone():
     assert np.all(np.diff(a) >= 0.0)
 
 
-def test_threshold_consistency_with_isf():
+def test_threshold_consistency_with_ppf():
     n, k, alpha = 40, 5, 0.05
 
-    c = tra.isf(alpha, n, k)
+    c = tra.ppf(alpha, n, k)
     a = tra.thresholds(alpha, n, k)
 
     from scipy.stats import beta
 
     i = np.arange(1, k + 1)
     a_expected = beta.ppf(c, i, n - i + 1)
+    a_expected = np.maximum.accumulate(np.clip(a_expected, 0.0, 1.0))
 
     assert np.allclose(a, a_expected)
 
@@ -39,5 +40,5 @@ def test_threshold_alpha_monotonicity():
     a_lo = tra.thresholds(0.01, n, k)
     a_hi = tra.thresholds(0.10, n, k)
 
-    # larger alpha → less stringent thresholds
-    assert np.all(a_lo >= a_hi)
+    # larger alpha → less stringent thresholds (larger a_i values for lower-tail test)
+    assert np.all(a_hi >= a_lo)

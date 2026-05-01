@@ -47,9 +47,9 @@ def thresholds(alpha: float, n: int | None = None, k: int | None = None, method:
 
     n, k = _validate_nk(n, k)
     
-    from .api import isf
+    from .api import ppf
 
-    c_alpha = isf(alpha, n=n, k=k, method="exact")
+    c_alpha = ppf(alpha, n=n, k=k, method="exact")
 
     i = np.arange(1, k + 1)
     a = beta.ppf(c_alpha, i, n - i + 1)

@@ -70,9 +70,9 @@ $$T_{n:k} = \min_{1 \le i \le k} R_i.$$
 p = tra.pvalue(pvals, k=5)
 ```
 
-Internally this evaluates the null survival function
+Internally this evaluates the null cumulative distribution function (CDF):
 
-$$S_{n:k}(c) = P(T_{n:k} > c).$$
+$$F_{n:k}(c) = P(T_{n:k} \le c).$$
 
 ---
 
@@ -134,8 +134,10 @@ For repeated evaluations, you can construct a distribution object:
 dist = tra.null_dist(n=100, k=5)
 
 dist.sf(0.1)
+dist.cdf(0.1)
 dist.sf_grid(np.linspace(0,1,100))
 dist.isf(0.05)
+dist.ppf(0.05)
 dist.thresholds(0.05)
 dist.test(pvals)
 ```

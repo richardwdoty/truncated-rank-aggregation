@@ -16,6 +16,12 @@ def test_distribution_sf_matches_functional_api():
     assert dist.sf(c) == tra.sf(c, n=40, k=5)
 
 
+def test_distribution_cdf_matches_functional_api():
+    dist = tra.null_dist(n=40, k=5)
+    c = 0.1
+    assert dist.cdf(c) == tra.cdf(c, n=40, k=5)
+
+
 def test_distribution_sf_grid_matches_functional_api():
     dist = tra.null_dist(n=30, k=4)
     cs = np.linspace(0.01, 0.99, 25)
@@ -28,6 +34,12 @@ def test_distribution_isf_matches_functional_api():
     dist = tra.null_dist(n=60, k=7)
     alpha = 0.05
     assert dist.isf(alpha) == tra.isf(alpha, n=60, k=7)
+
+
+def test_distribution_ppf_matches_functional_api():
+    dist = tra.null_dist(n=60, k=7)
+    alpha = 0.05
+    assert dist.ppf(alpha) == tra.ppf(alpha, n=60, k=7)
 
 
 def test_distribution_thresholds_matches_functional_api():

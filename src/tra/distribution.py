@@ -5,7 +5,7 @@ from typing import Iterable
 
 import numpy as np
 
-from .api import isf, pvalue, sf, sf_grid, test
+from .api import cdf, isf, ppf, pvalue, sf, sf_grid, test
 from .backends.asymptotic import _validate_k_only
 from .backends.exact_dp import _validate_nk
 from .thresholds import thresholds
@@ -46,8 +46,14 @@ class TRADistribution:
     def sf_grid(self, c: Iterable[float] | np.ndarray) -> np.ndarray:
         return sf_grid(c, n=self.n, k=self.k, method=self.method)
 
+    def cdf(self, c: float) -> float:
+        return cdf(c, n=self.n, k=self.k, method=self.method)
+
     def isf(self, alpha: float) -> float:
         return isf(alpha, n=self.n, k=self.k, method=self.method)
+
+    def ppf(self, alpha: float) -> float:
+        return ppf(alpha, n=self.n, k=self.k, method=self.method)
 
     def thresholds(self, alpha: float) -> np.ndarray:
         return thresholds(alpha, n=self.n, k=self.k, method=self.method)
