@@ -1,12 +1,14 @@
 from __future__ import annotations
 
 import numpy as np
-from scipy.stats import beta
+from scipy.stats import beta, gamma
 
 from .backends.exact_dp import _validate_nk
 
 
-def thresholds(alpha: float, n: int | None = None, k: int | None = None, method: str = "exact") -> np.ndarray:
+def thresholds(
+    alpha: float, n: int | None = None, k: int | None = None, method: str = "exact"
+) -> np.ndarray:
     """
     Compute ordered rejection thresholds for TRA.
 
@@ -27,34 +29,43 @@ def thresholds(alpha: float, n: int | None = None, k: int | None = None, method:
     k
         Truncation level.
     method
-        Null evaluation method. Currently only "exact" is supported.
+        Null evaluation method. Supports "exact", "simplex", and "asymptotic".
 
     Returns
     -------
     ndarray
         Array of thresholds [a_1, ..., a_k].
-
-    Currently only the exact finite-n backend is supported.
     """
     if not (0.0 < alpha < 1.0):
         raise ValueError("alpha must lie in (0,1).")
 
-    if method != "exact":
+    if method not in ["exact", "simplex", "asymptotic"]:
         raise ValueError(f"Unknown method={method!r}.")
 
-    if n is None or k is None:
-        raise ValueError("method='exact' requires both n and k.")
+    if method in ["exact", "simplex"]:
+        if n is None or k is None:
+            raise ValueError(f"method={method!r} requires both n and k.")
+        n, k = _validate_nk(n, k)
+    elif method == "asymptotic":
+        if k is None:
+            raise ValueError("method='asymptotic' requires k.")
+        from .backends.asymptotic import _validate_k_only
 
-    n, k = _validate_nk(n, k)
-    
+        k = _validate_k_only(k)
+
     from .api import ppf
 
-    c_alpha = ppf(alpha, n=n, k=k, method="exact")
+    c_alpha = ppf(alpha, n=n, k=k, method=method)
 
     i = np.arange(1, k + 1)
-    a = beta.ppf(c_alpha, i, n - i + 1)
 
-    a = np.clip(a, 0.0, 1.0)
+    if method in ["exact", "simplex"]:
+        a = beta.ppf(c_alpha, i, n - i + 1)
+        a = np.clip(a, 0.0, 1.0)
+    elif method == "asymptotic":
+        a = gamma.ppf(c_alpha, a=i, scale=1.0)
+        a = np.maximum(a, 0.0)
+
     a = np.maximum.accumulate(a)
 
     return a

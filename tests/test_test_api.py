@@ -33,10 +33,10 @@ def test_pvalue_consistency_with_cdf():
     p = rng.uniform(0, 1, size=30)
     k = 6
     n = 30
-    
+
     t = tra.statistic(p, k)
     pv = tra.pvalue(p, k)
-    
+
     # p-value should be exactly the lower-tail cdf evaluated at the statistic
     assert np.isclose(pv, tra.cdf(t, n=n, k=k))
 
@@ -48,10 +48,10 @@ def test_pvalue_ordering_for_extreme_inputs():
     p_mild = np.array([0.1, 0.2, 0.3, 0.4, 0.5])
     p_extreme = np.array([0.01, 0.02, 0.03, 0.4, 0.5])
     k = 3
-    
+
     pv_mild = tra.pvalue(p_mild, k)
     pv_extreme = tra.pvalue(p_extreme, k)
-    
+
     assert pv_extreme < pv_mild
 
 
@@ -59,16 +59,16 @@ def test_functional_vs_distribution_api():
     rng = np.random.default_rng(3)
     p = rng.uniform(0, 1, size=40)
     n, k = 40, 5
-    
+
     dist = tra.null_dist(n=n, k=k)
-    
+
     t = tra.statistic(p, k)
-    
+
     # Check consistency of distribution methods with functional API
     assert np.isclose(dist.cdf(t), tra.cdf(t, n=n, k=k))
     assert np.isclose(dist.sf(t), tra.sf(t, n=n, k=k))
     assert np.isclose(dist.pvalue(p), tra.pvalue(p, k))
-    
+
     alpha = 0.05
     assert np.isclose(dist.ppf(alpha), tra.ppf(alpha, n=n, k=k))
     assert np.isclose(dist.isf(alpha), tra.isf(alpha, n=n, k=k))

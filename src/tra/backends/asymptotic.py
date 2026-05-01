@@ -1,8 +1,8 @@
 from __future__ import annotations
 
-import math
 
 import numpy as np
+from scipy.optimize import brentq
 from scipy.stats import gamma
 
 
@@ -92,8 +92,8 @@ def sf_asymptotic_grid(c: np.ndarray, k: int) -> np.ndarray:
     cc = c[mid]
     t_size = cc.size
 
-    g = gamma_thresholds_g_grid(cc, k)   # shape (t_size, k+1)
-    lam = np.diff(g, axis=1)             # shape (t_size, k), columns lambda_1,...,lambda_k
+    g = gamma_thresholds_g_grid(cc, k)  # shape (t_size, k+1)
+    lam = np.diff(g, axis=1)  # shape (t_size, k), columns lambda_1,...,lambda_k
 
     if k == 1:
         out[mid] = np.exp(-g[:, 1])
@@ -137,3 +137,22 @@ def sf_asymptotic(c: float, k: int) -> float:
     """
     c = _validate_c_scalar(c)
     return float(sf_asymptotic_grid(np.array([c], dtype=float), k)[0])
+
+
+def isf_asymptotic(alpha: float, k: int) -> float:
+    """
+    Inverse survival for the asymptotic null.
+    """
+    k = _validate_k_only(k)
+    if not (0.0 <= alpha <= 1.0):
+        raise ValueError(f"alpha must be in [0,1]; got {alpha}.")
+
+    if alpha >= 1.0:
+        return 0.0
+    if alpha <= 0.0:
+        return 1.0
+
+    def f(c: float) -> float:
+        return sf_asymptotic(c, k) - alpha
+
+    return float(brentq(f, 0.0, 1.0, xtol=1e-12, rtol=1e-12, maxiter=200))

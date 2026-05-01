@@ -55,6 +55,15 @@ class TRADistribution:
     def ppf(self, alpha: float) -> float:
         return ppf(alpha, n=self.n, k=self.k, method=self.method)
 
+    def critical_value(self, alpha: float) -> float:
+        """
+        Level-alpha critical value (lower-tail quantile) for the test statistic.
+
+        Consistent with the package's lower-tail inference convention, the test
+        rejects when the statistic is <= critical_value(alpha).
+        """
+        return self.ppf(alpha)
+
     def thresholds(self, alpha: float) -> np.ndarray:
         return thresholds(alpha, n=self.n, k=self.k, method=self.method)
 

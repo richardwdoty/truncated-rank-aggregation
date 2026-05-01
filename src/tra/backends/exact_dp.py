@@ -108,7 +108,9 @@ def q_from_thresholds(a: np.ndarray) -> np.ndarray:
     return q
 
 
-def sf_exact(c: float, n: int, k: int, *, return_details: bool = False) -> float | ExactDPResult:
+def sf_exact(
+    c: float, n: int, k: int, *, return_details: bool = False
+) -> float | ExactDPResult:
     r"""
     Exact null survival S_{n:k}(c) = P(T_{n:k} > c) via the DP recursion in the paper.
 
@@ -328,8 +330,8 @@ def sf_exact_grid(c: np.ndarray, n: int, k: int) -> np.ndarray:
     cc = c[mid]
     t_size = cc.size
 
-    a = thresholds_a_grid(cc, n, k)     # shape (t_size, k+1)
-    p = np.diff(a, axis=1)              # shape (t_size, k)
+    a = thresholds_a_grid(cc, n, k)  # shape (t_size, k+1)
+    p = np.diff(a, axis=1)  # shape (t_size, k)
 
     # DP state after j processed bins: support r = 0, ..., j
     probs = np.ones((t_size, 1), dtype=float)

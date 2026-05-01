@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import math
 
+from scipy.optimize import brentq
 import numpy as np
 from scipy.stats import beta
 
@@ -128,7 +129,7 @@ def sf_simplex_grid(c: np.ndarray, n: int, k: int) -> np.ndarray:
 
     # Tail moments I_j(z) = ∫_z^1 t^j (1-t)^m dt
     tail = np.exp(b * np.log1p(-z))  # (1-z)^(m+1)
-    I = tail / b
+    I = tail / b  # noqa: E741
     I_all = np.empty((cc.size, d + 1), dtype=float)
     I_all[:, 0] = I
 
@@ -138,7 +139,7 @@ def sf_simplex_grid(c: np.ndarray, n: int, k: int) -> np.ndarray:
     for j in range(0, d):
         a_par = float(j + 1)
         denom = a_par + b
-        I = (a_par / denom) * I + (pow_z * tail) / denom
+        I = (a_par / denom) * I + (pow_z * tail) / denom  # noqa: E741
         I_all[:, j + 1] = I
         pow_z *= z
 
@@ -160,3 +161,22 @@ def sf_simplex(c: float, n: int, k: int) -> float:
     """
     c = _validate_c_scalar(c)
     return float(sf_simplex_grid(np.array([c], dtype=float), n, k)[0])
+
+
+def isf_simplex(alpha: float, n: int, k: int) -> float:
+    """
+    Inverse survival for the simplex null.
+    """
+    n, k = _validate_nk(n, k)
+    if not (0.0 <= alpha <= 1.0):
+        raise ValueError(f"alpha must be in [0,1]; got {alpha}.")
+
+    if alpha >= 1.0:
+        return 0.0
+    if alpha <= 0.0:
+        return 1.0
+
+    def f(c: float) -> float:
+        return sf_simplex(c, n, k) - alpha
+
+    return float(brentq(f, 0.0, 1.0, xtol=1e-12, rtol=1e-12, maxiter=200))

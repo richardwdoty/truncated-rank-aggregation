@@ -8,10 +8,11 @@ from .backends.asymptotic import sf_asymptotic, sf_asymptotic_grid
 from .backends.exact_dp import _validate_nk, isf_exact, sf_exact, sf_exact_grid
 from .result import TRATestResult
 from .statistic import _as_1d_float_array, statistic
-from .thresholds import thresholds
 
 
-def sf(c: float, n: int | None = None, k: int | None = None, method: str = "exact") -> float:
+def sf(
+    c: float, n: int | None = None, k: int | None = None, method: str = "exact"
+) -> float:
     """
     Survival function under the global null.
 
@@ -75,22 +76,42 @@ def sf_grid(
     raise ValueError(f"Unknown method={method!r}.")
 
 
-def cdf(c: float, n: int | None = None, k: int | None = None, method: str = "exact") -> float:
+def cdf(
+    c: float, n: int | None = None, k: int | None = None, method: str = "exact"
+) -> float:
     """CDF under the global null."""
     return 1.0 - sf(c, n=n, k=k, method=method)
 
 
-def isf(alpha: float, n: int | None = None, k: int | None = None, method: str = "exact") -> float:
+def isf(
+    alpha: float, n: int | None = None, k: int | None = None, method: str = "exact"
+) -> float:
     """Inverse survival."""
     if method == "exact":
         if n is None or k is None:
             raise ValueError("method='exact' requires both n and k.")
         return isf_exact(alpha, n, k)
 
+    if method == "simplex":
+        if n is None or k is None:
+            raise ValueError("method='simplex' requires both n and k.")
+        from .backends.simplex import isf_simplex
+
+        return isf_simplex(alpha, n, k)
+
+    if method == "asymptotic":
+        if k is None:
+            raise ValueError("method='asymptotic' requires k.")
+        from .backends.asymptotic import isf_asymptotic
+
+        return isf_asymptotic(alpha, k)
+
     raise ValueError(f"Unknown method={method!r}.")
 
 
-def ppf(alpha: float, n: int | None = None, k: int | None = None, method: str = "exact") -> float:
+def ppf(
+    alpha: float, n: int | None = None, k: int | None = None, method: str = "exact"
+) -> float:
     """Percent point function (inverse of CDF)."""
     return isf(1.0 - alpha, n=n, k=k, method=method)
 
@@ -126,6 +147,3 @@ def test(
     pv = cdf(t, n=n, k=k, method=method)
 
     return TRATestResult(statistic=t, pvalue=pv, n=n, k=k)
-
-
-from .distribution import null_dist
